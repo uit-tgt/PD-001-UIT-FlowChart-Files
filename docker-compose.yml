@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  nextjs-app:
+    container_name: nextjs-app
+    depends_on: 
+      - nestjs-app
+    build:
+      context: ./PD-001-UIT-FlowChart-FE
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./PD-001-UIT-FlowChart-FE:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - flowchart-network
+
+  nestjs-app:
+    container_name: nestjs-app
+    depends_on:
+      - mysql-master
+      - mysql-slave
+    build:
+      context: ./PD-001-UIT-FlowChart-BE
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - ./PD-001-UIT-FlowChart-BE:/src/app
+      - /src/app/node_modules
+    command: sh -c "/src/app/wait-for-it.sh mysql-master:3306 -- npm run start:dev"
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - DB_MASTER_HOST=$MYSQL_MASTER_HOST
+      - DB_MASTER_USER=$MYSQL_MASTER_USER
+      - DB_MASTER_PASSWORD=$MYSQL_MASTER_PASSWORD
+      - DB_MASTER_DATABASE=$MYSQL_MASTER_DATABASE
+      - DB_MASTER_PORT=$MYSQL_MASTER_PORT
+      
+      - DB_SLAVE_HOST=$MYSQL_SLAVE_HOST
+      - DB_SLAVE_USER=$MYSQL_SLAVE_USER
+      - DB_SLAVE_PASSWORD=$MYSQL_SLAVE_PASSWORD
+      - DB_SLAVE_DATABASE=$MYSQL_SLAVE_DATABASE
+      - DB_SLAVE_PORT=$MYSQL_SLAVE_PORT
+    stdin_open: true
+    tty: true
+    ports:
+      - 3001:3001
+    networks:
+      - flowchart-network
+
+  mysql-master:
+    build: ./PD-001-UIT-FlowChart-DO/master
+    container_name: mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: app
+    volumes:
+      - mysql-master-data:/var/lib/mysql
+      - ./PD-001-UIT-FlowChart-DO/master/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 3307:3306
+    networks:
+      - flowchart-network
+
+  mysql-slave:
+    build: ./PD-001-UIT-FlowChart-DO/slave
+    container_name: mysql-slave
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: app
+    volumes:
+      - mysql-slave-data:/var/lib/mysql
+      - ./PD-001-UIT-FlowChart-DO/slave/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 3308:3306
+    depends_on:
+      - mysql-master
+    networks:
+      - flowchart-network
+    
+  mysql-slave-2:
+    build: ./PD-001-UIT-FlowChart-DO/slave
+    container_name: mysql-slave-backup
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: app
+    volumes:
+      - mysql-slave-data-backup:/var/lib/mysql
+      - ./PD-001-UIT-FlowChart-DO/slave/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 3309:3306
+    depends_on:
+      - mysql-master
+    networks:
+      - flowchart-network
+
+volumes:
+  mysql-master-data:
+  mysql-slave-data:
+  mysql-slave-data-backup:
+
+networks:
+  flowchart-network:

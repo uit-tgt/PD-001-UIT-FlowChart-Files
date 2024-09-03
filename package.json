@@ -1,0 +1,32 @@
+{
+    "name": "dockerized-full-stack-environment",
+    "version": "1.0.0",
+    "description": "Dockerized environment with a database, a back-end and a front-end application.",
+    "scripts": {
+        "build:back": "docker-compose build nestjs-app",
+        "build:front": "docker-compose build nextjs-app",
+        "build:db": "docker-compose build mysql-master mysql-slave",
+        "build:all": "npm run build:fe && npm run build:be && npm run build:db",
+        "start:db": "docker-compose up mysql-master mysql-slave",
+        "start:back": "docker-compose up nestjs-app",
+        "start:front": "docker-compose up nextjs-app",
+        "start:containers": "docker-compose up --build",
+        "run:containers": "docker-compose up -d",
+        "stop:back": "docker-compose stop nestjs-app",
+        "stop:containers": "docker-compose stop",
+        "clean": "docker-compose down -v",
+        "clone:fe": "git clone https://github.com/uit-tgt/PD-001-UIT-FlowChart-FE.git PD-001-UIT-FlowChart-FE && cd PD-001-UIT-FlowChart-FE && npm install",
+        "clone:be": "git clone https://github.com/uit-tgt/PD-001-UIT-FlowChart-BE.git PD-001-UIT-FlowChart-BE && cd PD-001-UIT-FlowChart-BE && npm install",
+        "clone:do": "git clone https://github.com/uit-tgt/PD-001-UIT-FlowChart-DO.git PD-001-UIT-FlowChart-DO",
+        "clone:all": "npm run clone:fe && npm run clone:be && npm run clone:do",
+        "pull:fe": "git pull https://github.com/uit-tgt/PD-001-UIT-FlowChart-FE.git",
+        "pull:be": "git pull https://github.com/uit-tgt/PD-001-UIT-FlowChart-BE.git",
+        "pull:do": "git pull https://github.com/uit-tgt/PD-001-UIT-FlowChart-DO.git",
+        "pull:all": "npm run pull:fe && npm run pull:be",
+        "pull:rebuild-all": "npm run pull:all && npm run start:containers",
+        "pull:be-rebuild": "npm run pull:be && npm run build:back && npm run start:back",
+        "pull:fe-rebuild": "npm run pull:fe && npm run build:front && npm run start:front"
+    },
+    "author": "",
+    "license": "ISC"
+}
